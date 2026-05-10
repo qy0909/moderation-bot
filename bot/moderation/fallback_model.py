@@ -1,7 +1,7 @@
 from transformers import pipeline
 
 # -------------------------
-# MODEL CACHE (LOAD ONCE)
+# MODEL CACHE
 # -------------------------
 _sentiment_model = None
 _toxicity_model = None
@@ -15,8 +15,8 @@ def get_sentiment_model():
 
     if _sentiment_model is None:
         _sentiment_model = pipeline(
-            "sentiment-analysis",
-            model="distilbert-base-uncased-finetuned-sst-2-english"
+            "text-classification",
+            model="cardiffnlp/twitter-roberta-base-sentiment-latest"
         )
 
     return _sentiment_model
@@ -31,7 +31,7 @@ def get_toxicity_model():
     if _toxicity_model is None:
         _toxicity_model = pipeline(
             "text-classification",
-            model="unitary/toxic-bert"
+            model="citizenlab/distilbert-base-multilingual-cased-toxicity"
         )
 
     return _toxicity_model
@@ -44,9 +44,12 @@ def fallback_sentiment(text):
     model = get_sentiment_model()
     result = model(text)[0]
 
+    polarity = result.get("label", "UNKNOWN").upper()
+    confidence = float(result.get("score", 0.0))
+
     return {
-        "polarity": result.get("label", "UNKNOWN").upper(),
-        "confidence": float(result.get("score", 0.0))
+        "polarity": polarity,
+        "confidence": confidence
     }
 
 
@@ -57,17 +60,32 @@ def fallback_toxicity(text):
     model = get_toxicity_model()
     result = model(text)[0]
 
-    score = float(result.get("score", 0.0))
-    toxicity_label = "toxic" if score > 0.5 else "non-toxic"
+    raw_label = result.get("label", "").lower()
+    raw_score = float(result.get("score", 0.0))
 
-    severity = (
-        "severe toxic" if score >= 0.85 else
-        "toxic" if score >= 0.60 else
-        "non-toxic"
-    )
+    # Match API normalization
+    if raw_label in ["not_toxic", "non-toxic", "safe", "label_0"]:
+        label = "non-toxic"
+        score = 1 - raw_score
+
+    elif raw_label in ["toxic", "label_1"]:
+        label = "toxic"
+        score = raw_score
+
+    else:
+        label = "unknown"
+        score = 0.0
+
+    # Match API severity thresholds
+    if score >= 0.85:
+        severity = "severe toxic"
+    elif score >= 0.60:
+        severity = "toxic"
+    else:
+        severity = "non-toxic"
 
     return {
-        "label": toxicity_label,
+        "label": label,
         "score": score,
         "severity": severity
     }

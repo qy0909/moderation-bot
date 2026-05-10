@@ -4,7 +4,8 @@ messages = [
     "Hello everyone",
     "Great work team",
     "You are stupid",
-    "This is awful"
+    "This is awful",
+    "bro ni memang annoying gila"
 ]
 
 for msg in messages:

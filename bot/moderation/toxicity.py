@@ -11,7 +11,7 @@ client = InferenceClient(
     api_key=os.getenv("HF_API_KEY")
 )
 
-MODEL = "unitary/toxic-bert"
+MODEL = "citizenlab/distilbert-base-multilingual-cased-toxicity"
 
 
 # -------------------------
@@ -33,13 +33,26 @@ def analyze_toxicity(text):
 
         output = result[0]
 
-        score = float(output.get("score", 0.0))
-
-        # 🚨 DO NOT trust model label
-        label = "toxic" if score >= 0.5 else "non-toxic"
+        raw_label = output.label.lower()
+        raw_score = float(output.score)
 
         # -------------------------
-        # SEVERITY LOGIC (SPC READY)
+        # NORMALIZE MODEL OUTPUT
+        # -------------------------
+        if raw_label in ["not_toxic", "non-toxic", "safe", "label_0"]:
+            label = "non-toxic"
+            score = 1 - raw_score
+
+        elif raw_label in ["toxic", "label_1"]:
+            label = "toxic"
+            score = raw_score
+
+        else:
+            label = "unknown"
+            score = 0.0
+
+        # -------------------------
+        # SEVERITY LOGIC
         # -------------------------
         if score >= 0.85:
             severity = "severe toxic"
@@ -54,7 +67,9 @@ def analyze_toxicity(text):
             "severity": severity
         }
 
-    except Exception:
+    except Exception as e:
+        print("TOXICITY ERROR:", e)
+
         return {
             "label": "unknown",
             "score": 0.0,

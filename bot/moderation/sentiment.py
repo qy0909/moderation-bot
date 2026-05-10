@@ -11,7 +11,7 @@ client = InferenceClient(
     api_key=os.getenv("HF_API_KEY")
 )
 
-MODEL_NAME = "distilbert/distilbert-base-uncased-finetuned-sst-2-english"
+MODEL_NAME = "cardiffnlp/twitter-roberta-base-sentiment-latest"
 
 
 # -------------------------
