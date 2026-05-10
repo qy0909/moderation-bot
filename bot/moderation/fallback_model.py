@@ -5,6 +5,7 @@ from transformers import pipeline
 # -------------------------
 _sentiment_model = None
 _toxicity_model = None
+_emotion_model = None
 
 
 # -------------------------
@@ -38,23 +39,36 @@ def get_toxicity_model():
 
 
 # -------------------------
-# FALLBACK SENTIMENT
+# EMOTION MODEL
+# -------------------------
+def get_emotion_model():
+    global _emotion_model
+
+    if _emotion_model is None:
+        _emotion_model = pipeline(
+            "text-classification",
+            model="tabularisai/multilingual-emotion-classification",
+            top_k=None
+        )
+
+    return _emotion_model
+
+
+# -------------------------
+# SENTIMENT FALLBACK
 # -------------------------
 def fallback_sentiment(text):
     model = get_sentiment_model()
     result = model(text)[0]
 
-    polarity = result.get("label", "UNKNOWN").upper()
-    confidence = float(result.get("score", 0.0))
-
     return {
-        "polarity": polarity,
-        "confidence": confidence
+        "polarity": result.get("label", "UNKNOWN").upper(),
+        "confidence": float(result.get("score", 0.0))
     }
 
 
 # -------------------------
-# FALLBACK TOXICITY
+# TOXICITY FALLBACK
 # -------------------------
 def fallback_toxicity(text):
     model = get_toxicity_model()
@@ -63,7 +77,6 @@ def fallback_toxicity(text):
     raw_label = result.get("label", "").lower()
     raw_score = float(result.get("score", 0.0))
 
-    # Match API normalization
     if raw_label in ["not_toxic", "non-toxic", "safe", "label_0"]:
         label = "non-toxic"
         score = 1 - raw_score
@@ -76,7 +89,6 @@ def fallback_toxicity(text):
         label = "unknown"
         score = 0.0
 
-    # Match API severity thresholds
     if score >= 0.85:
         severity = "severe toxic"
     elif score >= 0.60:
@@ -89,3 +101,43 @@ def fallback_toxicity(text):
         "score": score,
         "severity": severity
     }
+
+# -------------------------
+# EMOTION FALLBACK
+# -------------------------
+def fallback_emotion(text):
+    model = get_emotion_model()
+
+    try:
+        result = model(text)
+
+        if not result:
+            return {"emotion": "unknown", "confidence": 0.0}
+
+        # HANDLE BOTH POSSIBLE FORMATS SAFELY
+        first = result[0]
+
+        # Case 1: [[{...}, {...}]]
+        if isinstance(first, list):
+            emotions = first
+
+        # Case 2: [{...}, {...}]
+        else:
+            emotions = first if isinstance(first, list) else result
+
+        # ensure list of dicts
+        emotions = [e for e in emotions if isinstance(e, dict)]
+
+        if not emotions:
+            return {"emotion": "unknown", "confidence": 0.0}
+
+        top = max(emotions, key=lambda x: x["score"])
+
+        return {
+            "emotion": top["label"].lower(),
+            "confidence": float(top["score"])
+        }
+
+    except Exception as e:
+        print("EMOTION ERROR:", e)
+        return {"emotion": "unknown", "confidence": 0.0}
