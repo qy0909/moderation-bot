@@ -77,6 +77,9 @@ def fallback_toxicity(text):
     raw_label = result.get("label", "").lower()
     raw_score = float(result.get("score", 0.0))
 
+    # keep original confidence
+    confidence = raw_score
+
     if raw_label in ["not_toxic", "non-toxic", "safe", "label_0"]:
         label = "non-toxic"
         score = 1 - raw_score
@@ -88,6 +91,7 @@ def fallback_toxicity(text):
     else:
         label = "unknown"
         score = 0.0
+        confidence = 0.0
 
     if score >= 0.85:
         severity = "severe toxic"
@@ -99,6 +103,7 @@ def fallback_toxicity(text):
     return {
         "label": label,
         "score": score,
+        "confidence": confidence,
         "severity": severity
     }
 

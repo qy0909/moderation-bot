@@ -28,6 +28,7 @@ def analyze_toxicity(text):
             return {
                 "label": "unknown",
                 "score": 0.0,
+                "confidence": 0.0,
                 "severity": "non-toxic"
             }
 
@@ -35,6 +36,9 @@ def analyze_toxicity(text):
 
         raw_label = output.label.lower()
         raw_score = float(output.score)
+
+        # store original confidence
+        confidence = raw_score
 
         # -------------------------
         # NORMALIZE MODEL OUTPUT
@@ -64,6 +68,7 @@ def analyze_toxicity(text):
         return {
             "label": label,
             "score": score,
+            "confidence": confidence,
             "severity": severity
         }
 
@@ -73,5 +78,6 @@ def analyze_toxicity(text):
         return {
             "label": "unknown",
             "score": 0.0,
+            "confidence": 0.0,
             "severity": "non-toxic"
         }
