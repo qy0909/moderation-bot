@@ -1,5 +1,5 @@
 ### **Expected input**
-cleaned = {
+```cleaned = {
         'guild_id': message.get('guild_id'),
         'channel_id': message.get('channel_id'),
         'user_id': message.get('user_id'),
@@ -11,7 +11,7 @@ cleaned = {
         'sentiment_confidence': max(0.0, min(1.0, float(message.get('sentiment_confidence', 0)))),
         'emotion': str(message.get('emotion', 'neutral')),
         'emotion_confidence': max(0.0, min(1.0, float(message.get('emotion_confidence', 0))))
-}
+}```
 
 ### **Return**
 {
