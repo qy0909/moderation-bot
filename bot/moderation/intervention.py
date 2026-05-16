@@ -61,7 +61,7 @@ class Moderator:
                 'emotion_confidence': max(0.0, min(1.0, float(message.get('emotion_confidence', 0))))
             }
             return cleaned
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, AttributeError):
             return None
 
     def _get_action_type(self,clean_message:dict,result):
