@@ -1,26 +1,11 @@
 import pandas as pd
 import math
-import weakref
 import asyncio
 import numpy as np
 from bot.utils.logger import logger
 from collections import defaultdict,deque
 from enum import StrEnum,auto
-"""
-    cleaned = {
-        'guild_id': message.get('guild_id'),
-        'channel_id': message.get('channel_id'),
-        'user_id': message.get('user_id'),
-        'message_id': message.get('message_id'),
-        'message_content': str(message.get('text','')),
-        'toxicity_score': max(0.0, min(1.0, float(message.get('toxicity', 0)))),
-        'toxicity_confidence': max(0.0, min(1.0,float(message.get('toxicity_confidence', 0)))),
-        'sentiment_score': max(-1.0, min(1.0, float(message.get('sentiment', 0)))),
-        'sentiment_confidence': max(0.0, min(1.0, float(message.get('sentiment_confidence', 0)))),
-        'emotion': str(message.get('emotion', 'neutral')),
-        'emotion_confidence': max(0.0, min(1.0, float(message.get('emotion_confidence', 0))))
-    }
-"""
+
 class EmotionType(StrEnum):
     ANGER = auto()
     CONTEMPT = auto()
@@ -53,6 +38,7 @@ class Aggregator:
             EmotionType.LOVE.value: 0.00,
         }
         self.user_locks = {}
+        self.global_lock = asyncio.Lock()
         self.avg = 0.5
         self.std = 0.1
         self.guild_last_ewma = self.avg
@@ -190,12 +176,17 @@ class Aggregator:
 
             ewma = self.lamb * cli + (1 - self.lamb) * prev_ewma
 
-            self.user_last_ewmas[user_id] = ewma
+            async with self.global_lock:
+                self.user_last_ewmas[user_id] = ewma
 
             user_buffer.append({**clean_message, 'ewma': ewma, 'cli': cli})
 
             return {'ewma': ewma, 'cli': cli}
-
+    
+    async def get_user_last_ewma(self):
+        async with self.global_lock:
+            snapshot = dict(self.user_last_ewmas)
+        return snapshot
     
 class AggregatorData:
     def __init__(self,channel_id,guild_id):
@@ -252,3 +243,4 @@ class AggregatorData:
         except Exception as e:
             logger.error(f'Failed to load data: {e}')
             return []
+
