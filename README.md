@@ -34,10 +34,19 @@ cleaned = {
 2. numpy pandas scipy google-genai python-dotenv 
 
 ### **Step** *example*
-1. fetch data by aggregator data
+1. fetch data by aggregator data (baseline data must be normal / healthy / in-control)
 2. create aggregator instance and fit with data
 3. create threshold instance
 4. create generator instance
 5. create moderator instance
-6. output = await moderator.make_decision(msg, record=record fetch from fetch_user_message)
+6. output = await moderator.make_decision(msg, record=record fetched from fetch_user_message)
 
+### **logic**
+1. lambda : weight of current message against historical
+2. current_ewma : lambda (current_cli) + (1-lambda) previous_ewma
+3. current_cli : Prioritizes confidence intervals. If trust score > 0.7, use raw model scores; otherwise, apply dynamic penalties...reliable high>low , toxicity>sentiment>emotion => 0.5/0.3/0.2
+4. normalize multiplier : This adjustment protects the system against hardcoded threshold degradation
+5. ucl : current_ewma > thresholds
+6. threshold : avg_baseline + norm_multiplier * std_baseline * sqrt(lambda/(2-lambda)) * (start_up) where start_up -> 1 when number of message -> infinity
+7. sentiment -> [0,1] where A negative sentiment score results in a higher CLI value
+8. emotion mapping : refered to PAD where -P , -D and +/-A is highly negative. P similars to sentiment score, -D {'anger', 'contempt','disgust'} 
