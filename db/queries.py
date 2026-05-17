@@ -17,8 +17,8 @@ async def register_user(user_id: int, username: str):
     except Exception as e:
         logger.error(f"DB Error [register_user]: Failed to register user {user_id}. Details: {e}")
 
-async def update_user_statistics(user_id: int, toxicity_score: float):
-    """Updates the user's rolling averages and message counts."""
+async def update_user_statistics(user_id: int, toxicity_score: float, new_ewma: float = None):
+    """Updates the user's rolling averages, message counts, and EWMA."""
     try:
         query = """
             UPDATE users
@@ -27,10 +27,11 @@ async def update_user_statistics(user_id: int, toxicity_score: float):
                 rolling_toxicity_avg = (
                     (rolling_toxicity_avg * total_messages) + $2
                 ) / (total_messages + 1),
+                last_ewma = $3,
                 last_seen = CURRENT_TIMESTAMP
             WHERE user_id = $1
         """
-        await db.pool.execute(query, user_id, toxicity_score)
+        await db.pool.execute(query, user_id, toxicity_score, new_ewma)
     except Exception as e:
         logger.error(f"DB Error [update_user_statistics]: {e}")
 
@@ -53,17 +54,18 @@ async def log_analyzed_message(data: dict):
             data.get('user_id'), 
             data.get('channel_id'),
             data.get('message_content', ''),
-            data.get('content_hash', 'no_hash_provided'),  # Added per feedback
+            data.get('content_hash', 'no_hash_provided'),
             data.get('sentiment_score', 0.0),          
             data.get('toxicity_score', 0.0),           
             data.get('model_name', 'unknown_model'), 
             data.get('model_version', '1.0')
         )
 
-        # Automatically update the user's running averages
+        # Automatically update the user's running averages and pass the EWMA
         await update_user_statistics(
             data.get('user_id'),
-            data.get('toxicity_score', 0.0)
+            data.get('toxicity_score', 0.0),
+            data.get('ewma') 
         )
 
     except Exception as e:
