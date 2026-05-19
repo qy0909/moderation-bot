@@ -1,14 +1,6 @@
-# Environments
-venv/
-env/
 .env
+*.log
 
-# Python cache
-__pycache__/
-*.pyc
-
-# Database data
-modbot-data/
 
 # Documentation
 .md
