@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS users (
     total_messages INTEGER DEFAULT 0,
     rolling_toxicity_avg REAL DEFAULT 0.0
         CHECK (rolling_toxicity_avg >= 0 AND rolling_toxicity_avg <= 1),
-    last_ewma REAL DEFAULT NULL
+    last_ewma REAL DEFAULT NULL,
     warning_count INTEGER DEFAULT 0,
     last_seen TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
