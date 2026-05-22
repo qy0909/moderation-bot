@@ -5,7 +5,8 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 from bot.analytics.threshold import ActionType
-class Response_generator:
+
+class ResponseGenerator:
     def __init__(self, environment_path='.env', api_name='GENERATIVE_AI_API'):
         load_dotenv(environment_path)
         API = os.getenv(api_name)

@@ -1,11 +1,11 @@
-from bot.moderation.response_generator import Response_generator
+from bot.moderation.response_generator import ResponseGenerator
 from bot.analytics.threshold import ActionType, AdaptiveThreshold
 from datetime import datetime, timezone
 from bot.analytics.aggregation import Aggregator, EmotionType
 from bot.utils.logger import logger
 
 class Moderator:
-    def __init__(self,threshold,response_generator,aggregator):
+    def __init__(self, aggregator, threshold,response_generator,):
         self.threshold = threshold
         self.aggregator = aggregator
         self.response_generator = response_generator
