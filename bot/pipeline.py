@@ -20,3 +20,7 @@
 #     "content": message.content,
 #     "timestamp": message.created_at.isoformat(),
 # }
+
+class ModerationPipeline:
+    async def handle_discord_message(self, message):
+        return None
