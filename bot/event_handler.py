@@ -38,6 +38,18 @@ class ModerationDiscordBot(discord.Client):
         
         # 2. Pass the message to your pipeline → get back a moderation result
         # await means: "do this, and wait for it to finish before continuing."
+        
+        # 2a. Before passing msg to pipeline, check 2 edge cases
+        # Empty msg
+        if not message.content:
+            return
+        if not message.content.strip():
+            return
+        
+        # Msg too long
+        if len(message.content) > 2000:  # Discord's own limit is 2000 characters, so this is a reasonable cap.
+            return
+        
         result = await self.pipeline.handle_discord_message(message)
         
         # 3. If the result contains a response → send it to the channel
