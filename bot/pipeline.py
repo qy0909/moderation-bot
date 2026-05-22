@@ -39,15 +39,23 @@ class ModerationPipeline:
         }
         
         # 2. Call analyze_text(content) to get toxicity score
-        nlp_result = analyze_text(message_data["content"])
+        try:
+            nlp_result = analyze_text(message_data["content"])
+        except Exception as e:
+            print(f"NLP analysis failed: {e}")
+            return None # Give up on this msg, don't crash the bot
         
         # 3. Merge message_data + scores (Combine into one dict)
         record = {**message_data, **nlp_result}
         
         # 4. Call moderator.make_decision() (Gets the intervention decision)
         # Both parameter and return type in make_decision is dictionary
-        decision = await self.moderator.make_decision(record)
-        print(decision)
+        try:
+            decision = await self.moderator.make_decision(record)
+            print(decision)
+        except Exception as e:
+            print(f"Moderation decision failed: {e}")
+            return None  # return None bcs if result is None, the if is False (inside event_handler), the bot stays silent instead of crashing. That's the graceful behaviour
         
         # 5. Return result to event_handler (Bot sends the response)
         return {"decision": decision}
