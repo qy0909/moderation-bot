@@ -43,9 +43,9 @@ async def log_analyzed_message(data: dict):
             INSERT INTO messages (
                 message_id, guild_id, user_id, channel_id, 
                 message_content, content_hash, sentiment_score, toxicity_score, 
-                model_name, model_version
+                model_name, model_version, is_flagged
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
         """
         await db.pool.execute(
             query, 
@@ -58,7 +58,8 @@ async def log_analyzed_message(data: dict):
             data.get('sentiment_score', 0.0),          
             data.get('toxicity_score', 0.0),           
             data.get('model_name', 'unknown_model'), 
-            data.get('model_version', '1.0')
+            data.get('model_version', '1.0'),
+            data.get('is_flagged', False)
         )
 
         # Automatically update the user's running averages and pass the EWMA

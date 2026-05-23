@@ -26,11 +26,11 @@ def analyze_text(text):
     return {
         "text": text,
 
-        "sentiment": sentiment_score,
+        "sentiment_score": sentiment_score,
         "sentiment_confidence": sentiment["confidence"],
         "sentiment_label": sentiment["polarity"],
 
-        "toxicity": toxicity["score"],
+        "toxicity_score": toxicity["score"],
         "toxicity_confidence": toxicity["confidence"],
         "toxicity_label": toxicity["label"],
         "severity": toxicity.get("severity", "non-toxic"),

@@ -31,8 +31,12 @@ class Moderator:
 
         # generate text if any
         reply = ''
+        reason = ''
+        
         if(action_type != ActionType.IGNORE):
-            reply = await self.response_generator.generate_moderation_text(action_type=action_type, message_content=clean_message.get('message_content'))
+            generated = await self.response_generator.generate_moderation_text(action_type=action_type, message_content=clean_message.get('message_content'))
+            reply = generated["reply"]
+            reason = generated["reason"]
 
         return {
             'user_id': clean_message.get('user_id'),
@@ -40,9 +44,11 @@ class Moderator:
             'channel_id':clean_message.get('channel_id'),
             'message_id': clean_message.get('message_id'),
             'action_type': action_type.value,
+            'reasoning': reason,
             'generated_response': reply,
             'created_at': datetime.now(timezone.utc).isoformat(),
-            'metrics': { k.value: v for k,v in (self.threshold.get_thresholds(self.aggregator)).items()}
+            'metrics': { k.value: v for k,v in (self.threshold.get_thresholds(self.aggregator)).items()},
+            'ewma': result.get('ewma')
         }
 
     def _clean_input(self, message:dict):

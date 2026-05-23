@@ -98,7 +98,10 @@ class ResponseGenerator:
 
                 if decode_response:
                     logger.info(f'reason: {decode_response.get("reason")}')
-                    return decode_response.get('reply')
+                    return {
+                        "reason": decode_response.get('reason'),
+                        "reply": decode_response.get('reply')
+                    }
                 else: return ''
             except json.JSONDecodeError as e:
                 logger.error(f'Failed to decode: {e}')

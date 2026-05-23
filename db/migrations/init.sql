@@ -13,10 +13,6 @@ CREATE TABLE IF NOT EXISTS users (
 -- MODERATION SETTINGS TABLE
 CREATE TABLE IF NOT EXISTS moderation_settings (
     guild_id BIGINT PRIMARY KEY,
-    toxicity_threshold REAL DEFAULT 0.75
-        CHECK (toxicity_threshold >= 0 AND toxicity_threshold <= 1),
-    sentiment_threshold REAL DEFAULT -0.60
-        CHECK (sentiment_threshold >= -1 AND sentiment_threshold <= 1),
     auto_intervention_enabled BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -54,7 +50,7 @@ CREATE TABLE IF NOT EXISTS interventions (
         REFERENCES messages(message_id) ON DELETE SET NULL,
     action_type TEXT NOT NULL,
     severity_level TEXT
-        CHECK (severity_level IN ('low', 'medium', 'high', 'critical')),
+        CHECK (severity_level IN ('low', 'high', 'critical')),
     reasoning TEXT,
     generated_response TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP

@@ -9,6 +9,8 @@
 import discord
 from bot.config import build_intents
 from bot.pipeline import ModerationPipeline
+from db.database import db
+from bot.utils.logger import logger
 
 # discord.Client means the bot inherits from discord.py built-in Client class
 # Get standard Discord behaviour for free, this class add custom stuff on top
@@ -24,10 +26,21 @@ class ModerationDiscordBot(discord.Client):
     # Discord calls them automatically when something happens: 
     # Bot successfully logged in and is online
     async def on_ready(self):
+        await db.connect()
+        
+        # Register GUILD for new Discord server
+        for guild in self.guilds:
+            await db.pool.execute(
+                "INSERT INTO moderation_settings (guild_id) VALUES ($1) ON CONFLICT DO NOTHING",
+                guild.id
+            )
+        logger.info(f"Registered {len(self.guilds)} guild(s).")
+
         print("Bot is online.")
 
     # Bot lost connection to Discord
     async def on_disconnect(self):
+        await db.disconnect()
         print("Bot is disconnected.")
 
     # A message was sent in any visible channel

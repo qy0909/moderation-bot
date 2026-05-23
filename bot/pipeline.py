@@ -14,6 +14,11 @@ from bot.analytics.aggregation import Aggregator
 from bot.analytics.threshold import AdaptiveThreshold
 from bot.moderation.response_generator import ResponseGenerator
 from bot.moderation.intervention import Moderator
+from db.database import db
+
+from bot.analytics.aggregation import AggregatorData
+
+from db.queries import register_user, log_analyzed_message, log_intervention
 
 class ModerationPipeline:
     
@@ -38,6 +43,14 @@ class ModerationPipeline:
             "timestamp": message.created_at.isoformat(),
         }
         
+        # Discord IDs are strings in the shared format, but the DB uses BIGINT.
+        # Convert once here, then use these for every DB call below.
+        user_id = int(message_data["user_id"])
+        guild_id = int(message_data["guild_id"])
+        channel_id = int(message_data["channel_id"])
+        message_id = int(message_data["message_id"])
+
+        
         # 2. Call analyze_text(content) to get toxicity score
         try:
             nlp_result = analyze_text(message_data["content"])
@@ -48,16 +61,63 @@ class ModerationPipeline:
         # 3. Merge message_data + scores (Combine into one dict)
         record = {**message_data, **nlp_result}
         
-        # 4. Call moderator.make_decision() (Gets the intervention decision)
+        # 4. Fetch user history before make_decision()
+        aggregator_data = AggregatorData(message_data["channel_id"], message_data["guild_id"])
+        user_record = await aggregator_data.fetch_user_messages(db.pool, user_id)
+        
+        # 5. Call moderator.make_decision() (Gets the intervention decision)
         # Both parameter and return type in make_decision is dictionary
         try:
-            decision = await self.moderator.make_decision(record)
+            decision = await self.moderator.make_decision(record, record=user_record)
             print(decision)
         except Exception as e:
             print(f"Moderation decision failed: {e}")
             return None  # return None bcs if result is None, the if is False (inside event_handler), the bot stays silent instead of crashing. That's the graceful behaviour
         
-        # 5. Return result to event_handler (Bot sends the response)
+        # 6. Save to database
+        try:
+            record["message_id"] = message_id
+            record["guild_id"] = guild_id
+            record["user_id"] = user_id
+            record["channel_id"] = channel_id
+            
+            if decision:
+                record["ewma"] = decision["ewma"]
+            
+            await register_user(user_id, message_data["username"])
+            
+            # Bridging analyzer.py return part & log_analyzed_message return part
+            record["message_content"] = record["content"]
+            
+            # Decide the flag
+            record["is_flagged"] = bool(decision and decision["action_type"] != "ignore")
+            
+            # Insert record to message table
+            await log_analyzed_message(record)
+            
+            # Insert record to intervention table
+            if decision and decision["action_type"] != "ignore":
+                
+                severity_map = {
+                    "soft_reminder": "low",
+                    "warning": "high",
+                    "escalate": "critical"
+                }
+
+                await log_intervention(
+                    guild_id=guild_id,
+                    user_id=user_id,
+                    message_id=message_id,
+                    action_type=decision["action_type"],
+                    reasoning=decision["reasoning"],
+                    severity_level=severity_map.get(decision["action_type"], "low"),
+                    generated_response=decision["generated_response"]
+                )
+            
+        except Exception as e:
+            print(f"Database error: {e}") # db error shouldn't stop the bot from replying
+        
+        # 7. Return result to event_handler (Bot sends the response)
         return {"decision": decision}
    
 
@@ -105,5 +165,31 @@ It needs a GENERATIVE_AI_API key in your .env file
 Moderator — the coordinator. It takes all three above and runs them in sequence 
 when make_decision() is called:
 - Moderator(threshold, response_generator, aggregator)
+
+'''
+
+
+'''
+FOR DATABASE PART,
+Save guild (moderation_settings) -> in event_handler.py on_ready()
+Register user -> pipeline.py when message is sent to produce result
+Save message (log analyzed msg) -> pipeline.py
+Save intervention if available (log intervention) -> pipeline.py
+
+DATABASE STRUCTURE
+guild_id   = which Discord server
+user_id    = who sent the message  
+message_id = the specific message
+channel_id = which channel it was sent in
+
+THE CHAIN
+moderation_settings (guild must exist first)
+    ↓
+users (user must exist first)
+    ↓
+messages (both guild and user must exist first)
+    ↓
+interventions (guild, user, and message must all exist first)
+
 
 '''
