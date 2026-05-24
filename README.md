@@ -30,8 +30,8 @@ cleaned = {
 ```
 
 ### **Setup** *example*
-1. get api from googleapis.github.io/python-genai/
-2. numpy pandas scipy google-genai python-dotenv 
+1. get api from ai.google.dev/gemini-api/docs
+2. numpy pandas scipy google-genai python-dotenv
 
 ### **Step** *example*
 1. fetch data by aggregator data (baseline data must be normal / healthy / in-control)
