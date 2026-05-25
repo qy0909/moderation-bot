@@ -221,7 +221,9 @@ moderation_settings (guild)
 ## The moderation algorithm
 
 The scoring logic lives in [bot/analytics/aggregation.py](bot/analytics/aggregation.py)
-and [bot/analytics/threshold.py](bot/analytics/threshold.py).
+and [bot/analytics/threshold.py](bot/analytics/threshold.py). For the full
+breakdown — data contracts, CLI/EWMA math, emotion mapping, and control-limit
+formulas — see **[docs/MODERATION_LOGIC.md](docs/MODERATION_LOGIC.md)**.
 
 1. **CLI (Composite Linguistic Index)** — each message's toxicity, sentiment,
    and emotion are fused into a single `[0, 1]` score. Weights default to
