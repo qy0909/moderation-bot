@@ -38,10 +38,17 @@ class ModerationDiscordBot(discord.Client):
 
         print("Bot is online.")
 
-    # Bot lost connection to Discord
+    # Bot lost connection to Discord 
+    # on_disconnect: transient event (fires repeatedly, auto-recovers
     async def on_disconnect(self):
-        await db.disconnect()
-        print("Bot is disconnected.")
+        # await db.disconnect() cannot do this
+        logger.warning("Lost connection to Discord. Auto-reconnecting when network returns.")
+        
+    # close() = real shutdown (fires once)
+    async def close(self):
+        await db.disconnect()  
+        logger.info("Bot shutting down, database closed.")
+        await super().close()
 
     # A message was sent in any visible channel
     async def on_message(self, message):
