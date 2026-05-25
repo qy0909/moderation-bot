@@ -31,6 +31,10 @@ CREATE TABLE IF NOT EXISTS messages (
         CHECK (sentiment_score >= -1 AND sentiment_score <= 1),
     toxicity_score REAL
         CHECK (toxicity_score >= 0 AND toxicity_score <= 1),
+    toxicity_confidence REAL,
+    sentiment_confidence REAL,
+    emotion TEXT,
+    emotion_confidence REAL,
     model_name TEXT,
     model_version TEXT,
     is_flagged BOOLEAN DEFAULT FALSE,

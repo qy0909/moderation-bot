@@ -24,12 +24,27 @@ class ModerationPipeline:
     
     def __init__(self):
         # aggregator, threshold, response_generator are local variables, created temporarily
-        # get passed into Moderator(...) immediately
-        aggregator = Aggregator()
-        threshold = AdaptiveThreshold()
-        response_generator = ResponseGenerator()
-        self.moderator = Moderator(aggregator, threshold, response_generator)  # only this needs to be saved bcs handle_discord_message will use
+        # get passed into Moderator(...) immediately (v1)
+        # to be saved bcs handle_discord_message will use
+        self.response_generator = ResponseGenerator()   # shared
+        self.moderators = {}     # # channel_id -> Moderator
     
+    # start_up() is supposed to replace these with real values computed from your channel's normal message history
+    async def _get_moderator(self, channel_id, guild_id):
+        if channel_id not in self.moderators:
+            aggregator = Aggregator()
+            threshold = AdaptiveThreshold()
+            moderator = Moderator(aggregator, threshold, self.response_generator)
+
+            # calibrate THIS channel's baseline from its own history
+            agg_data = AggregatorData(channel_id, guild_id)
+            messages = await agg_data.fetch_start_up_message(db.pool)
+            aggregator.start_up(messages)
+
+            self.moderators[channel_id] = moderator
+        return self.moderators[channel_id]
+
+
     async def handle_discord_message(self, message):
         
         # 1. Convert the Discord message object into a plain dict
@@ -68,7 +83,8 @@ class ModerationPipeline:
         # 5. Call moderator.make_decision() (Gets the intervention decision)
         # Both parameter and return type in make_decision is dictionary
         try:
-            decision = await self.moderator.make_decision(record, record=user_record)
+            moderator = await self._get_moderator(channel_id, guild_id)
+            decision = await moderator.make_decision(record, record=user_record)
             print(decision)
         except Exception as e:
             print(f"Moderation decision failed: {e}")

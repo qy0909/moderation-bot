@@ -43,9 +43,10 @@ async def log_analyzed_message(data: dict):
             INSERT INTO messages (
                 message_id, guild_id, user_id, channel_id, 
                 message_content, content_hash, sentiment_score, toxicity_score, 
-                model_name, model_version, is_flagged
+                model_name, model_version, is_flagged,
+                toxicity_confidence, sentiment_confidence, emotion, emotion_confidence
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
         """
         await db.pool.execute(
             query, 
@@ -59,7 +60,11 @@ async def log_analyzed_message(data: dict):
             data.get('toxicity_score', 0.0),           
             data.get('model_name', 'unknown_model'), 
             data.get('model_version', '1.0'),
-            data.get('is_flagged', False)
+            data.get('is_flagged', False),
+            data.get('toxicity_confidence', 0.0),
+            data.get('sentiment_confidence', 0.0),
+            data.get('emotion', 'neutral'),
+            data.get('emotion_confidence', 0.0)
         )
 
         # Automatically update the user's running averages and pass the EWMA
