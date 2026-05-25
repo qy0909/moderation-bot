@@ -1,11 +1,28 @@
-asyncpg==0.31.0
+# ── Discord bot framework ──────────────────────────────
 discord.py
+
+# ── Database: PostgreSQL (async driver) ────────────────
+asyncpg==0.31.0
+
+# ── Configuration / secrets ────────────────────────────
 python-dotenv==1.2.2
+
+# ── NLP via Hugging Face Inference API (primary path) ──
+huggingface_hub
 requests==2.32.3
+
+# ── NLP local-model fallback (when the HF API fails) ───
+transformers
+torch
+
+# ── Generative AI moderation replies (Google Gemini) ───
 google-genai
+
+# ── Statistical process control / analytics ───────────
 numpy
 pandas
 scipy
+
+# ── Testing ────────────────────────────────────────────
+pytest
 pytest-asyncio
-torch
-transformers
