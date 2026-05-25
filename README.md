@@ -72,7 +72,6 @@ moderation-bot/
 │   │   ├── toxicity.py         # HF toxicity (citizenlab/distilbert multilingual)
 │   │   ├── emotion.py          # HF emotion (tabularisai multilingual)
 │   │   ├── fallback_model.py   # local transformers models (offline fallback)
-│   │   ├── hf_client.py        # raw HF REST helper
 │   │   ├── intervention.py     # Moderator — make_decision()
 │   │   └── response_generator.py  # Gemini warning-text generator
 │   ├── analytics/
@@ -215,6 +214,30 @@ moderation_settings (guild)
 | `messages`            | every analyzed message with its scores |
 | `interventions`       | each action taken, severity, reasoning, generated reply |
 | `server_metrics`      | rolling SPC stats per guild (for a future dashboard) |
+
+---
+
+## Project status
+
+The core bot is functional end-to-end: NLP scoring → SPC decision → Gemini reply
+→ PostgreSQL logging. A few pieces are **intentionally scaffolded but not yet
+wired up** — they belong to the **admin dashboard** deliverable, which is a
+separate teammate's part. They are deliberate placeholders, not dead code.
+
+| Component | Location | Status |
+|-----------|----------|--------|
+| `server_metrics` table | [db/migrations/init.sql](db/migrations/init.sql) | created; nothing reads/writes it yet — reserved for *persisted* SPC trend history (needs code to populate it) |
+| `get_recent_toxicity_stream` | [db/queries.py](db/queries.py) | ready to call; not used yet |
+| `get_server_health_stats` | [db/queries.py](db/queries.py) | ready to call; not used yet |
+| `get_top_flagged_users` | [db/queries.py](db/queries.py) | ready to call; not used yet |
+| `AggregatorData.cal_hourly_average` | [bot/analytics/aggregation.py](bot/analytics/aggregation.py) | ready to call; not used yet |
+| `Aggregator.get_user_last_ewma` | [bot/analytics/aggregation.py](bot/analytics/aggregation.py) | ready to call; not used yet |
+
+The three `queries.py` helpers already return dashboard-ready data computed live
+from `messages` / `users` / `interventions`, so a *snapshot* dashboard needs no
+extra schema. `server_metrics` is only required if the dashboard wants
+*historical trend charts* (e.g. control-limit drift over days), which would also
+need code to insert snapshots over time.
 
 ---
 
