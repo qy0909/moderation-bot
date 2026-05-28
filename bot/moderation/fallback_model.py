@@ -17,7 +17,7 @@ def get_sentiment_model():
     if _sentiment_model is None:
         _sentiment_model = pipeline(
             "text-classification",
-            model="cardiffnlp/twitter-roberta-base-sentiment-latest"
+            model="cardiffnlp/twitter-xlm-roberta-base-sentiment"
         )
 
     return _sentiment_model
