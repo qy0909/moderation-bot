@@ -16,7 +16,7 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt
 
 # Copy needed folders into container /app
-COPY dasboard/ ./dashboard/
+COPY dashboard/ ./dashboard/
 COPY db/ ./db/
 
 # Run Python command to start the dashboard when container starts
