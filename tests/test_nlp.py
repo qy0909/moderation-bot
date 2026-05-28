@@ -11,6 +11,8 @@ messages = [
     "Hello everyone",
     "Great work team",
     "You are stupid",
+    "你很丑",
+    "U sangat hodoh",
     "This is awful",
     "bro ni memang annoying gila"
 ]
