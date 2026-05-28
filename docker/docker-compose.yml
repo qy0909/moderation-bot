@@ -16,7 +16,7 @@ services:
   bot:
     build:
       context: .
-      dockerfile: docker/Dockerfile.bot
+      dockerfile: Dockerfile.bot
     image: bot
     container_name: modbot-app
     restart: always
@@ -32,7 +32,7 @@ services:
   dashboard:
     build:
       context: .
-      dockerfile: docker/Dockerfile.dashboard  
+      dockerfile: Dockerfile.dashboard  
     image: dashboard
     container_name: modbot-dashboard
     restart: always
