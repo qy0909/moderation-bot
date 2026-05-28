@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ModBot - Sign In</title>
+  <link rel="icon" type="image/png" href="images/favicon.png">
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body class="login-body">
+  <main class="login-shell">
+    <!-- LEFT: animated network -->
+    <section class="login-visual">
+      <canvas id="network-canvas"></canvas>
+      <div class="visual-overlay">
+        <div class="visual-badge"><img src="/images/logo-dark.png" alt="ModBot Logo" width="80"height="80"/></div>
+        <h1 class="visual-headline">
+          Your Discord server's<br/>
+          <span class="accent">immune system</span>
+        </h1>
+        <p class="visual-sub">Real-time moderation · Healthier communities</p>
+      </div>
+    </section>
+
+    <!-- RIGHT: sign in form -->
+    <section class="login-panel">
+      <div class="login-card">
+        <h2 class="login-title">Welcome back, admin</h2>
+        <p class="login-sub">Enter your credentials to access the ModBot dashboard</p>
+
+        <form id="login-form" class="login-form" autocomplete="off">
+          <label class="field">
+            <span class="field-label">Discord Server ID</span>
+            <input type="text" id="serverId" placeholder="e.g. 1023456789012345678" required />
+          </label>
+
+          <label class="field">
+            <span class="field-label">Username</span>
+            <input type="text" id="username" placeholder="admin" required />
+          </label>
+
+          <label class="field">
+            <span class="field-label">Password</span>
+            <input type="password" id="password" placeholder="••••••••" required />
+          </label>
+
+          <div class="login-error" id="login-error"></div>
+
+          <button type="submit" class="login-btn">
+            <span>SIGN IN</span>
+          </button>
+        </form>
+
+        <p class="login-foot">ModBot © 2026 · Built for safer communities</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/js/login.js"></script>
+</body>
+</html>

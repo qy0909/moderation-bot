@@ -1,0 +1,47 @@
+services:
+  db:
+    image: postgres:15
+    container_name: modbot-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: modbot
+    ports:
+      - "5432:5432"
+    volumes:
+      - modbot-data:/var/lib/postgresql/data
+      # tells Docker to runschema automatically on a fresh install
+      - ./db/migrations/init.sql:/docker-entrypoint-initdb.d/init.sql 
+  bot:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.bot
+    image: bot
+    container_name: modbot-app
+    restart: always
+    depends_on:
+      - db
+    environment:
+      - DISCORD_TOKEN=${DISCORD_TOKEN}
+      - HF_API_KEY=${HF_API_KEY}
+      - GENERATIVE_AI_API=${GENERATIVE_AI_API}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD}
+      - DATABASE_URL=${DATABASE_URL}
+      
+  dashboard:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dashboard  
+    image: dashboard
+    container_name: modbot-dashboard
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+
+volumes:
+  modbot-data:

@@ -117,6 +117,7 @@ async def get_top_flagged_users(guild_id: int, limit: int = 5):
             FROM users
             LEFT JOIN interventions 
                 ON users.user_id = interventions.user_id AND interventions.guild_id = $1
+            WHERE users.warning_count > 0 
             GROUP BY users.username, users.rolling_toxicity_avg, users.warning_count
             ORDER BY users.warning_count DESC
             LIMIT $2
@@ -148,3 +149,80 @@ async def log_intervention(guild_id: int, user_id: int, message_id: int, action_
 
     except Exception as e:
         logger.error(f"DB Error [log_intervention]: {e}")
+
+async def get_live_feed(guild_id: int, limit: int = 20):
+    """Live moderation feed — recent messages with scores."""
+    try:
+        query = """
+            SELECT 
+                m.message_content, m.toxicity_score, m.sentiment_score,
+                m.emotion, m.is_flagged, m.message_timestamp,
+                u.username
+            FROM messages m
+            JOIN users u ON m.user_id = u.user_id
+            WHERE m.guild_id = $1
+            ORDER BY m.message_timestamp DESC
+            LIMIT $2
+        """
+        return await db.pool.fetch(query, guild_id, limit)
+    except Exception as e:
+        logger.error(f"DB Error [get_live_feed]: {e}")
+        return []
+
+async def get_intervention_history(guild_id: int, limit: int = 20):
+    """Intervention history with username and message content."""
+    try:
+        query = """
+            SELECT 
+                i.action_type, i.severity_level, i.reasoning,
+                i.generated_response, i.created_at,
+                u.username,
+                m.message_content
+            FROM interventions i
+            JOIN users u ON i.user_id = u.user_id
+            LEFT JOIN messages m ON i.trigger_message_id = m.message_id
+            WHERE i.guild_id = $1
+            ORDER BY i.created_at DESC
+            LIMIT $2
+        """
+        return await db.pool.fetch(query, guild_id, limit)
+    except Exception as e:
+        logger.error(f"DB Error [get_intervention_history]: {e}")
+        return []
+
+
+async def get_message_volume(guild_id: int, hours: int = 24):
+    """Message count bucketed by hour for volume chart."""
+    try:
+        query = """
+            SELECT 
+                DATE_TRUNC('hour', message_timestamp) as hour,
+                COUNT(*) as message_count
+            FROM messages
+            WHERE guild_id = $1
+                AND message_timestamp > NOW() - INTERVAL '1 hour' * $2
+            GROUP BY hour
+            ORDER BY hour ASC
+        """
+        return await db.pool.fetch(query, guild_id, hours)
+    except Exception as e:
+        logger.error(f"DB Error [get_message_volume]: {e}")
+        return []
+
+
+async def get_intervention_breakdown(guild_id: int):
+    """Count of each action type for pie chart."""
+    try:
+        query = """
+            SELECT 
+                action_type,
+                COUNT(*) as count
+            FROM interventions
+            WHERE guild_id = $1
+            GROUP BY action_type
+            ORDER BY count DESC
+        """
+        return await db.pool.fetch(query, guild_id)
+    except Exception as e:
+        logger.error(f"DB Error [get_intervention_breakdown]: {e}")
+        return []

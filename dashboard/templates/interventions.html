@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ModBot - Interventions</title>
+    <link rel="icon" type="image/png" href="images/favicon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/css/style.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  </head>
+  <body>
+    <div class="layout">
+      <!-- Sidebar -->
+      <nav class="sidebar">
+        <div class="sidebar-brand">
+          <span class="brand-icon"
+            ><img
+              src="/images/logo-dark.png"
+              alt="ModBot Logo"
+              width="35"
+              height="35"
+          /></span>
+          <span class="brand-name">ModBot</span>
+        </div>
+        <ul class="nav-links">
+          <li>
+            <a href="/" class="nav-link"
+              ><span class="nav-icon">◈</span> Overview</a
+            >
+          </li>
+          <li>
+            <a href="/monitor" class="nav-link"
+              ><span class="nav-icon">◉</span> Monitor</a
+            >
+          </li>
+          <li>
+            <a href="/interventions" class="nav-link active"
+              ><span class="nav-icon">⚑</span> Interventions</a
+            >
+          </li>
+        </ul>
+        <div class="sidebar-footer">
+          <div class="sidebar-status">
+            <span class="status-dot"></span>
+            <span class="status-text">Bot Online</span>
+          </div>
+          <button class="logout-btn" onclick="modbotLogout()">
+            <span class="logout-icon">⏻</span>
+            <span>Sign out</span>
+          </button>
+        </div>
+      </nav>
+
+      <main class="main">
+        <!--Interventions Page Header -->
+        <header class="page-header">
+          <div>
+            <h1 class="page-title">Interventions</h1>
+            <p class="page-subtitle">
+              Breakdown of bot actions and the full chronological log.
+            </p>
+          </div>
+          <!-- Refreshing Mechanism -->
+          <div class="header-right">
+            <button class="refresh-btn" onclick="performRefresh()">
+              ↻ Refresh
+            </button>
+          </div>
+        </header>
+
+        <!-- Pie -->
+        <div class="card chart-card-full">
+          <div class="card-header">
+            <span>Intervention Breakdown</span>
+            <div class="card-header-controls">
+              <div class="tf-group" id="tf-pie">
+                <button class="tf-btn" data-tf="all">All</button>
+                <button class="tf-btn active" data-tf="24h">24h</button>
+                <button class="tf-btn" data-tf="6h">6h</button>
+                <button class="tf-btn" data-tf="1h">1h</button>
+              </div>
+            </div>
+          </div>
+          <canvas id="interventionPieChart" height="300"></canvas>
+        </div>
+
+        <!-- History -->
+        <div class="card">
+          <div class="card-header">
+            <span>Intervention History</span>
+            <div class="card-header-controls">
+              <span class="badge badge-green" id="intervention-count"
+                >0 records</span
+              >
+              <span class="page-indicator" id="int-page-indicator"></span>
+            </div>
+          </div>
+          <div class="feed-wrapper">
+            <table class="feed-table">
+              <thead>
+                <tr>
+                  <th>Trigger Message</th>
+                  <th>User</th>
+                  <th>Action</th>
+                  <th>Severity</th>
+                  <th>Reasoning</th>
+                  <th>Bot Response</th>
+                  <th>Time</th>
+                </tr>
+              </thead>
+              <tbody id="interventions-body">
+                <tr>
+                  <td colspan="6" class="loading-row">Loading...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination" id="int-pagination"></div>
+        </div>
+      </main>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+    <script src="/static/js/chart.js"></script>
+    <script>
+      bindTimeframe("tf-pie", initInterventionPie);
+      initInterventionPie("24h");
+      loadInterventionHistory();
+
+      function performRefresh() {
+        const activeBtn = document.querySelector("#tf-pie .tf-btn.active");
+        const tf = activeBtn ? activeBtn.dataset.tf : "24h";
+        initInterventionPie(tf);
+        loadInterventionHistory();
+      }
+    </script>
+  </body>
+</html>
