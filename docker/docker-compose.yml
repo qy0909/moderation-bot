@@ -15,8 +15,8 @@ services:
       - ./db/migrations/init.sql:/docker-entrypoint-initdb.d/init.sql 
   bot:
     build:
-      context: .
-      dockerfile: Dockerfile.bot
+      context: ..
+      dockerfile: docker/Dockerfile.bot
     image: bot
     container_name: modbot-app
     restart: always
@@ -31,8 +31,8 @@ services:
       
   dashboard:
     build:
-      context: .
-      dockerfile: Dockerfile.dashboard  
+      context: ..
+      dockerfile: docker/Dockerfile.dashboard  
     image: dashboard
     container_name: modbot-dashboard
     restart: always
