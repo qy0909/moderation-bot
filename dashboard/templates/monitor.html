@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ModBot — Monitor</title>
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/css/style.css" />
+  </head>
+  <body>
+    <div class="layout">
+      <!-- Sidebar -->
+      <nav class="sidebar">
+        <div class="sidebar-brand">
+          <span class="brand-icon"><img src="/images/logo-dark.png" alt="ModBot Logo" width="35"height="35"/></span>
+          <span class="brand-name">ModBot</span>
+        </div>
+        <ul class="nav-links">
+          <li>
+            <a href="/" class="nav-link"
+              ><span class="nav-icon">◈</span> Overview</a
+            >
+          </li>
+          <li>
+            <a href="/monitor" class="nav-link active"
+              ><span class="nav-icon">◉</span> Monitor</a
+            >
+          </li>
+          <li>
+            <a href="/interventions" class="nav-link"
+              ><span class="nav-icon">⚑</span> Interventions</a
+            >
+          </li>
+        </ul>
+        <div class="sidebar-footer">
+          <div class="sidebar-status">
+            <span class="status-dot"></span>
+            <span class="status-text">Bot Online</span>
+          </div>
+          <button class="logout-btn" onclick="modbotLogout()">
+            <span class="logout-icon">⏻</span>
+            <span>Sign out</span>
+          </button>
+        </div>
+      </nav>
+
+      <main class="main">
+        <!-- Monitor Page Header -->
+        <header class="page-header">
+          <div>
+            <h1 class="page-title">Monitor</h1>
+            <p class="page-subtitle">
+              Real-time stream of analyzed messages and the users most often
+              flagged.
+            </p>
+          </div>
+           <!-- Refreshing Mechanism -->
+          <div class="header-right">
+            <button class="refresh-btn" onclick="performRefresh()">
+              ↻ Refresh
+            </button>
+          </div>
+        </header>
+
+        <!-- Live Feed -->
+        <div class="card">
+          <div class="card-header">
+            <span>Live Feed</span>
+            <div class="card-header-controls">
+              <span class="badge badge-green" id="feed-count">0 messages</span>
+              <span class="page-indicator" id="feed-page-indicator"></span>
+            </div>
+          </div>
+          <div class="feed-wrapper">
+            <table class="feed-table">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Message</th>
+                  <th>Toxicity</th>
+                  <th>Sentiment</th>
+                  <th>Emotion</th>
+                  <th>Flagged</th>
+                  <th>Time</th>
+                </tr>
+              </thead>
+              <tbody id="feed-body">
+                <tr>
+                  <td colspan="7" class="loading-row">Loading feed...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination" id="feed-pagination"></div>
+        </div>
+
+        <!-- Top Flagged Users -->
+        <div class="card">
+          <div class="card-header">
+            <span>Top Flagged Users</span>
+            <span class="badge badge-red">By warning count</span>
+          </div>
+          <div class="feed-wrapper">
+            <table class="feed-table">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Username</th>
+                  <th>Warning Count</th>
+                  <th>Avg Toxicity</th>
+                  <th>Risk Level</th>
+                </tr>
+              </thead>
+              <tbody id="flagged-users-body">
+                <tr>
+                  <td colspan="5" class="loading-row">Loading...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+    <script>
+      loadFeed();
+      loadFlaggedUsers();
+
+      function performRefresh() {
+        loadFeed();
+        loadFlaggedUsers();
+      }
+    </script>
+  </body>
+</html>

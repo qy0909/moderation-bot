@@ -26,3 +26,8 @@ scipy
 # ── Testing ────────────────────────────────────────────
 pytest
 pytest-asyncio
+
+# ── Dashboard ────────────────────────────────────────────
+fastapi
+uvicorn
+jinja2

@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ModBot - Overview</title>
+    <link rel="icon" type="image/png" href="images/favicon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/css/style.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
+  </head>
+  <body>
+    <div class="layout">
+      <!-- Sidebar -->
+      <nav class="sidebar">
+        <div class="sidebar-brand">
+          <span class="brand-icon"
+            ><img
+              src="/images/logo-dark.png"
+              alt="ModBot Logo"
+              width="35"
+              height="35"
+          /></span>
+          <span class="brand-name">ModBot</span>
+        </div>
+        <ul class="nav-links">
+          <li>
+            <a href="/" class="nav-link active"
+              ><span class="nav-icon">◈</span> Overview</a
+            >
+          </li>
+          <li>
+            <a href="/monitor" class="nav-link"
+              ><span class="nav-icon">◉</span> Monitor</a
+            >
+          </li>
+          <li>
+            <a href="/interventions" class="nav-link"
+              ><span class="nav-icon">⚑</span> Interventions</a
+            >
+          </li>
+        </ul>
+        <div class="sidebar-footer">
+          <div class="sidebar-status">
+            <span class="status-dot"></span>
+            <span class="status-text">Bot Online</span>
+          </div>
+          <button class="logout-btn" onclick="modbotLogout()">
+            <span class="logout-icon">⏻</span>
+            <span>Sign out</span>
+          </button>
+        </div>
+      </nav>
+
+      <main class="main">
+        <!-- Greeting -->
+        <div class="card greeting-card">
+          <div class="greeting-photons" id="greeting-photons"></div>
+          <div class="greeting-content">
+            <div class="greeting-hello">
+              Hi, Server #<span id="server-id"></span>
+            </div>
+            <div class="greeting-time" id="live-clock">—</div>
+            <div class="greeting-sub">
+              <span id="typing-text"></span><span class="typing-cursor">|</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Server Environment Health header row -->
+        <header class="page-header">
+          <div>
+            <h1 class="page-title">Server Environment Health</h1>
+            <p class="page-subtitle">
+              Live server signals — check score bounds before acting.
+            </p>
+          </div>
+          <!-- Refreshing Mechanism -->
+          <div class="header-right">
+            <button class="refresh-btn" onclick="performRefresh()">
+              ↻ Refresh
+            </button>
+          </div>
+        </header>
+
+        <!-- Stat cards -->
+        <div class="cards-row">
+          <!-- Total messages processed -->
+          <div class="card stat-card">
+            <div class="stat-icon" id="icon-total"></div>
+            <div class="stat-label">Messages Processed</div>
+            <div class="stat-value" id="total-messages">—</div>
+            <div class="stat-desc">Total since bot started</div>
+          </div>
+          <!-- Avg Toxicity Score -->
+          <div class="card stat-card">
+            <div class="stat-icon" id="icon-tox"></div>
+            <div class="stat-label">Avg Toxicity Score</div>
+            <div class="stat-value" id="avg-toxicity">—</div>
+            <span class="stat-label-badge" id="tox-label">—</span>
+            <div class="stat-desc">
+              <span class="stat-item"><strong>Safe:</strong> 0.0 - 0.59</span>
+              <span class="stat-separator">•</span>
+              <span class="stat-item"
+                ><strong>Warning:</strong> 0.60 - 0.84</span
+              >
+              <span class="stat-separator">•</span>
+              <span class="stat-item"><strong>Toxic:</strong> 0.85 - 1.0</span>
+            </div>
+          </div>
+          <!-- Avg Sentiment Score -->
+          <div class="card stat-card">
+            <div class="stat-icon" id="icon-sent"></div>
+            <div class="stat-label">Avg Sentiment Score</div>
+            <div class="stat-value" id="avg-sentiment">—</div>
+            <span class="stat-label-badge" id="sent-label">—</span>
+            <div class="stat-desc">
+              <span class="stat-item"
+                ><strong>Negative:</strong> &lt; -0.2</span
+              >
+              <span class="stat-separator">•</span>
+              <span class="stat-item"
+                ><strong>Neutral:</strong> -0.2 to 0.2</span
+              >
+              <span class="stat-separator">•</span>
+              <span class="stat-item"><strong>Positive:</strong> &gt; 0.2</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Emotion Tags -->
+        <div class="card">
+          <div class="card-header">
+            <span>Emotion Signals — Live</span>
+            <div class="card-header-controls">
+              <div class="tf-group" id="tf-cloud">
+                <button class="tf-btn" data-tf="all">All</button>
+                <button class="tf-btn active" data-tf="24h">24h</button>
+                <button class="tf-btn" data-tf="6h">6h</button>
+                <button class="tf-btn" data-tf="1h">1h</button>
+              </div>
+            </div>
+          </div>
+          <div class="stat-desc">
+            Tags sized by frequency across recent messages.
+          </div>
+          <div class="tag-cloud" id="emotion-cloud">
+            <div class="empty-state">Loading…</div>
+          </div>
+        </div>
+
+        <!-- Analytics -->
+        <!-- Toxicity Distribution -->
+        <div class="card chart-card-full">
+          <div class="card-header">
+            <span>Toxicity Distribution</span>
+            <div class="card-header-controls">
+              <div class="tf-group" id="tf-tox">
+                <button class="tf-btn" data-tf="all">All</button>
+                <button class="tf-btn active" data-tf="24h">24h</button>
+                <button class="tf-btn" data-tf="6h">6h</button>
+                <button class="tf-btn" data-tf="1h">1h</button>
+              </div>
+            </div>
+          </div>
+          <canvas id="toxicityChart" height="280"></canvas>
+        </div>
+
+        <!-- Sentiment Distribution -->
+        <div class="card chart-card-full">
+          <div class="card-header">
+            <span>Sentiment Distribution</span>
+            <div class="card-header-controls">
+              <div class="tf-group" id="tf-sent">
+                <button class="tf-btn" data-tf="all">All</button>
+                <button class="tf-btn active" data-tf="24h">24h</button>
+                <button class="tf-btn" data-tf="6h">6h</button>
+                <button class="tf-btn" data-tf="1h">1h</button>
+              </div>
+            </div>
+          </div>
+          <canvas id="sentimentChart" height="280"></canvas>
+        </div>
+
+        <!-- Message Volume Distribution -->
+        <div class="card chart-card-full">
+          <div class="card-header">
+            <span>Message Volume Distribution</span>
+            <div class="card-header-controls">
+              <div class="tf-group" id="tf-vol">
+                <button class="tf-btn" data-tf="all">All</button>
+                <button class="tf-btn active" data-tf="24h">24h</button>
+                <button class="tf-btn" data-tf="6h">6h</button>
+                <button class="tf-btn" data-tf="1h">1h</button>
+              </div>
+            </div>
+          </div>
+          <canvas id="volumeChart" height="280"></canvas>
+        </div>
+      </main>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+    <script src="/static/js/chart.js"></script>
+    <script>
+      loadHealth();
+      loadCharts();
+
+      function performRefresh() {
+        loadHealth();
+        loadCharts();
+      }
+    </script>
+  </body>
+</html>
