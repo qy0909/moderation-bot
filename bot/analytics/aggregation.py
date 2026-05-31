@@ -28,9 +28,9 @@ class Aggregator:
             EmotionType.CONTEMPT.value: 0.95,
             EmotionType.DISGUST.value: 0.85,
             EmotionType.ANGER.value: 0.75,
-            EmotionType.FEAR.value: 0.10, ／／0.55
-            EmotionType.SADNESS.value: 0.05, ／／0.5
-            EmotionType.FRUSTRATION.value: 0.30, ／／0.35
+            EmotionType.FEAR.value: 0.10, #0.55
+            EmotionType.SADNESS.value: 0.05, #0.5
+            EmotionType.FRUSTRATION.value: 0.30, #0.35
             EmotionType.NEUTRAL.value: 0.00,
             EmotionType.SURPRISE.value: 0.02,
             EmotionType.GRATITUDE.value: 0.02,
@@ -40,7 +40,7 @@ class Aggregator:
         self.user_locks = {}
         self.global_lock = asyncio.Lock()
         self.avg = 0.5
-        self.std = 0.15 ／／0.1
+        self.std = 0.15 #0.1
         self.guild_last_ewma = self.avg
         self.user_last_ewmas = defaultdict(lambda : self.guild_last_ewma)
 
