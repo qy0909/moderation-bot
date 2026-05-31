@@ -59,9 +59,9 @@ class Moderator:
                 'user_id': message.get('user_id'),
                 'message_id': message.get('message_id'),
                 'message_content': str(message.get('text','')),
-                'toxicity_score': max(0.0, min(1.0, float(message.get('toxicity', 0)))),
+                'toxicity_score': max(0.0, min(1.0, float(message.get('toxicity_score', 0)))),
                 'toxicity_confidence': max(0.0, min(1.0,float(message.get('toxicity_confidence', 0)))),
-                'sentiment_score': max(-1.0, min(1.0, float(message.get('sentiment', 0)))),
+                'sentiment_score': max(-1.0, min(1.0, float(message.get('sentiment_score', 0)))),
                 'sentiment_confidence': max(0.0, min(1.0, float(message.get('sentiment_confidence', 0)))),
                 'emotion': str(message.get('emotion', 'neutral')),
                 'emotion_confidence': max(0.0, min(1.0, float(message.get('emotion_confidence', 0))))
