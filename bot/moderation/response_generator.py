@@ -6,6 +6,12 @@ from google import genai
 from google.genai import types
 from bot.analytics.threshold import ActionType
 
+DEFAULT_RESPONSES = {
+    ActionType.SOFT_REMINDER: "Please keep the conversation respectful.",
+    ActionType.WARNING: "This is a warning. Please review community guidelines.",
+    ActionType.ESCALATE: "Your message has been flagged for review."
+}
+
 class ResponseGenerator:
     def __init__(self, environment_path='.env', api_name='GENERATIVE_AI_API'):
         load_dotenv(environment_path)
@@ -15,15 +21,20 @@ class ResponseGenerator:
         self._temperature=0.1
         self._model="gemini-2.5-flash-lite"
         self._system_instruction="""
-            ROLE: Professional Community Manager & Policy Compliance Officer.
-            TASK: Generate a specific, contextualized warning message for a user who has violated community guidelines.
+            ROLE: Professional Community Manager.
+            TASK: Generate a moderation response for a flagged message.
             INPUT:
                 - Action Type: Warning, Escalate, Soft reminder
-                - Message Content: The original problematic message.
+                - Message Content: The flagged message.
             LOGIC:
-                1. Identify the 'theme' of the original message (e.g., sexual harassment, hate speech, bullying).
-                2. Based on the 'Action Type', draft a response that directly addresses the theme. 
-                3. DO NOT repeat the offensive words, but refer to the 'behavior'.
+                1. Identify the violation 'theme' (e.g., sexual harassment, hate speech, bullying).
+                2. If the message does not appear clearly harmful, default to a gentle, neutral reminder.
+                3. Match tone strictly to Action Type:
+                    - soft_reminder: Friendly, non-accusatory. Gentle nudge.
+                    - warning: Firm and direct. Reference the specific behavior.
+                    - escalate: Serious and formal. State that further action may follow.
+                4. DO NOT repeat offensive words. Refer to the behavior only.
+                5. DO NOT refuse to generate a response.
             OUTPUT FORMAT (Valid JSON ONLY):
                 {
                 "reason": "Explain why this specific theme violates community standards.",
@@ -68,7 +79,10 @@ class ResponseGenerator:
         
         self._client = self._get_client
         if(self._client is None):
-            return ''
+            return {
+                "reason": "Client not found: Automated moderation triggered",
+                "reply": DEFAULT_RESPONSES[action_type]
+            }
 
         try:
             response = await self._client.models.generate_content(
@@ -92,7 +106,10 @@ class ResponseGenerator:
             try: 
                 if not response or not response.text:
                     logger.warning("Gemini returned an empty response.")
-                    return ''
+                    return {
+                        "reason": "Response not found: Automated moderation triggered",
+                        "reply": DEFAULT_RESPONSES[action_type]
+                    }
                 
                 decode_response = json.loads(response.text)
 
@@ -102,13 +119,23 @@ class ResponseGenerator:
                         "reason": decode_response.get('reason'),
                         "reply": decode_response.get('reply')
                     }
-                else: return ''
+                else: 
+                    return {
+                        "reason": "Invalid response: Automated moderation triggered",
+                        "reply": DEFAULT_RESPONSES[action_type]
+                    }
             except json.JSONDecodeError as e:
                 logger.error(f'Failed to decode: {e}')
-                return ''
+                return {
+                    "reason": "Failed to decode: Automated moderation triggered",
+                    "reply": DEFAULT_RESPONSES[action_type]
+                }
         except Exception as e:
-            logger.error(f'Something went wrong! : {e}') 
-            return ''
+            logger.error(f'Something went wrong! : {e}')    
+            return {
+                "reason": "{type(e).__name__}: Automated moderation triggered",
+                "reply": DEFAULT_RESPONSES[action_type]
+            }
     
     async def close_client(self):
         try:
