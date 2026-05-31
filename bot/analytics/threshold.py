@@ -15,8 +15,8 @@ class AdaptiveThreshold:
         self.alpha_map = {
             ActionType.IGNORE: 0.15,        
             ActionType.SOFT_REMINDER: 0.05,  
-            ActionType.WARNING: 0.001,     
-            ActionType.ESCALATE: 0.00001}
+            ActionType.WARNING: 0.01,     
+            ActionType.ESCALATE: 0.0001}
         self.thresholds = None
 
     def get_thresholds(self, aggregator):
