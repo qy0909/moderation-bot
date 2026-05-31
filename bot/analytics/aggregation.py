@@ -40,7 +40,7 @@ class Aggregator:
         self.user_locks = {}
         self.global_lock = asyncio.Lock()
         self.avg = 0.5
-        self.std = 0.1
+        self.std = 0.15 ／／0.1
         self.guild_last_ewma = self.avg
         self.user_last_ewmas = defaultdict(lambda : self.guild_last_ewma)
 
