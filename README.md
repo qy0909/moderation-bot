@@ -13,7 +13,7 @@ community manager.
 
 ## Features
 
-- **Live NLP scoring** of every message — toxicity, sentiment, and emotion via
+- **Live multilingual NLP scoring** of every message — toxicity, sentiment, and emotion via
   Hugging Face Inference APIs, with a local `transformers` fallback when the API
   is unavailable.
 - **Per-user, per-channel SPC** — an EWMA (Exponentially Weighted Moving
@@ -37,7 +37,7 @@ community manager.
 User sends a message
         │
         ▼
- analyze_text()        toxicity + sentiment + emotion  (HF API → local fallback)
+ analyze_text()        multilingual toxicity + sentiment + emotion  (HF API → local fallback)
         │
         ▼
  Aggregator            combine scores into a CLI, update the user's EWMA
@@ -67,11 +67,11 @@ moderation-bot/
 │   ├── event_handler.py        # discord.Client — on_ready / on_message / shutdown
 │   ├── pipeline.py             # glue layer: analyze → decide → store → reply
 │   ├── moderation/
-│   │   ├── analyzer.py         # runs all three NLP models, merges results
+│   │   ├── analyzer.py         # runs all three multilingual NLP models, merges results
 │   │   ├── sentiment.py        # HF sentiment (cardiffnlp/twitter-roberta)
 │   │   ├── toxicity.py         # HF toxicity (citizenlab/distilbert multilingual)
 │   │   ├── emotion.py          # HF emotion (tabularisai multilingual)
-│   │   ├── fallback_model.py   # local transformers models (offline fallback)
+│   │   ├── fallback_model.py   # multilingual local transformers models (offline fallback)
 │   │   ├── intervention.py     # Moderator — make_decision()
 │   │   └── response_generator.py  # Gemini warning-text generator
 │   ├── analytics/
