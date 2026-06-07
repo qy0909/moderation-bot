@@ -9,6 +9,7 @@
 # return the result to event_handler.py
 # Your shared message format should be:
 
+import asyncio
 from bot.moderation.analyzer import analyze_text
 from bot.analytics.aggregation import Aggregator
 from bot.analytics.threshold import AdaptiveThreshold
@@ -68,7 +69,8 @@ class ModerationPipeline:
         
         # 2. Call analyze_text(content) to get toxicity score
         try:
-            nlp_result = analyze_text(message_data["content"])
+            # nlp_result = analyze_text(message_data["content"])
+            nlp_result = await asyncio.to_thread(analyze_text, message_data["content"])
         except Exception as e:
             print(f"NLP analysis failed: {e}")
             return None # Give up on this msg, don't crash the bot
