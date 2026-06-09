@@ -43,7 +43,7 @@ cleaned = {
 
 ### **logic**
 1. lambda : weight of current message against historical
-2. current_ewma : lambda (current_cli) + (1-lambda) previous_ewma
+2. current_ewma : $\lambda (current_cli) + (1-lambda) previous_ewma$
 3. current_cli : Prioritizes confidence intervals. If trust score > 0.7, use raw model scores; otherwise, apply dynamic penalties...reliable high>low , toxicity>sentiment>emotion => 0.5/0.3/0.2
 4. normalize multiplier : This adjustment protects the system against hardcoded threshold degradation
 5. ucl : current_ewma > thresholds
