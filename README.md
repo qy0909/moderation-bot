@@ -237,32 +237,28 @@ need code to insert snapshots over time.
 ---
 
 ## The moderation algorithm
+The scoring logic lives in [bot/analytics/aggregation.py](bot/analytics/aggregation.py) and [bot/analytics/threshold.py](bot/analytics/threshold.py). For the full breakdown — data contracts, CLI/EWMA math, emotion mapping, and control-limit formulas — see **[docs/MODERATION_LOGIC.md](docs/MODERATION_LOGIC.md)**.
 
-The scoring logic lives in [bot/analytics/aggregation.py](bot/analytics/aggregation.py)
-and [bot/analytics/threshold.py](bot/analytics/threshold.py). For the full
-breakdown — data contracts, CLI/EWMA math, emotion mapping, and control-limit
-formulas — see **[docs/MODERATION_LOGIC.md](docs/MODERATION_LOGIC.md)**.
+1. **CLI (Composite Linguistic Index)**
+   - General CLI:  $$CLI = \frac{\sum_{i} (\text{matrix score}\_i \cdot \text{matrix confidence}\_i \cdot \text{matrix weight}\_{i})}{\sum_{i} (\text{matrix weight}_i \cdot \text{matrix confidence}_i)}$$, where $matrix_i$ = {toxicity, sentiment, emotion}
+   - Each message's toxicity, sentiment, and emotion are normalized into a single `[0, 1]` score.
+   - Weights default to **toxicity 0.5 / sentiment 0.3 / emotion 0.2**, but a signal is down-weighted when its model confidence is below `0.7`, so unreliable scores can't dominate.
+   - Sentiment is mapped to `[0, 1]` via $\frac{(1 - \text{sentiment score})}{2}$, so **more
+     negative sentiment → higher CLI**.
+   - Emotion is mapped using a PAD (Pleasure, Arousal, Dominance) Emotion Model (`contempt`/`disgust`/`anger` score highest; `joy`/`love`/`gratitude` near zero).
 
-1. **CLI (Composite Linguistic Index)** — each message's toxicity, sentiment,
-   and emotion are fused into a single `[0, 1]` score. Weights default to
-   **toxicity 0.5 / sentiment 0.3 / emotion 0.2**, but a signal is down-weighted
-   when its model confidence is below `0.7`, so unreliable scores can't dominate.
-   - Sentiment is mapped to `[0, 1]` via `(1 - sentiment_score) / 2`, so *more
-     negative sentiment → higher CLI*.
-   - Emotion is mapped using a PAD-inspired table (`contempt`/`disgust`/`anger`
-     score highest; `joy`/`love`/`gratitude` near zero).
-2. **EWMA** — `ewma = λ·cli + (1 − λ)·prev_ewma` (default `λ = 0.40`) gives a
-   per-user rolling score that weighs recent messages more heavily. A user who
-   sends many mildly toxic messages is flagged even if no single message crosses
-   a limit.
-3. **Baseline (`start_up`)** — when a channel's `Moderator` is first created, it
-   learns `μ` and `σ` of the CLI from up to 200 of that channel's *healthy*
-   historical messages (low toxicity, non-negative sentiment, no high-confidence
-   anger/contempt/disgust).
-4. **Adaptive thresholds** — control limits are
-   `μ + z(α)·σ·√(λ / (2 − λ))`, where each action has its own significance
-   level `α` (`soft_reminder` 0.05, `warning` 0.001, `escalate` 0.00001). The
-   EWMA is compared against these to pick `escalate` > `warning` >
+2. **EWMA**  
+   - $ewma_{current} = \lambda \cdot cli + (1 − \lambda)\cdot ewma_{previous}$
+   - default `λ = 0.40` gives a per-user rolling score that weighs recent messages more heavily. A user who sends many mildly toxic messages is flagged even if no single message crosses a limit.
+
+3. **Baseline (`start_up`)**  
+   - when a channel's `Moderator` is first created, it learns `μ` and `σ` of the CLI from up to 200 of that channel's **healthy** historical messages (low toxicity, non-negative sentiment, no high-confidence anger/contempt/disgust).
+   - `μ=0.5` and `σ=0.15` by default are set to guarantee high availability. When data is missing, corrupted, or insufficient, the aggregator can still safely make a predictable, mathematically sound decision rather than throwing an exception.
+
+4. **Adaptive thresholds**  
+   Upper Control Limit: $$UCL = \mu + z(\alpha)\cdot \sigma \cdot \sqrt{\frac{\lambda}{(2 − \lambda)}[1-(1-\lambda)^{2i}]}$$, where $i = \text{number of messages}$. When number of messages increases, $(1-\lambda)^{2i} \rightarrow 0 \therefore [1-0] \approx 1$. To simplify it, $UCL = \mu + z(\alpha)\cdot \sigma \cdot \sqrt{\frac{\lambda}{(2 − \lambda)}}$ was used.
+   - Each action has its own significance level `α` (`soft_reminder` 0.05, `warning` 0.001, `escalate` 0.00001).
+   - The EWMA is compared against these to pick `escalate` > `warning` >
    `soft_reminder` > `ignore`.
 
 ### Decision input / output
